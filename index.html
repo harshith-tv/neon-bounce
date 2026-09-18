@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05010f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Neon Bounce - a futuristic remake of the classic bounce game" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Neon Bounce</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="hud-item">
+          <span class="hud-label">LEVEL</span>
+          <span id="hud-level" class="hud-value">1</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">RINGS</span>
+          <span id="hud-rings" class="hud-value">0/0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">SCORE</span>
+          <span id="hud-score" class="hud-value">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">LIVES</span>
+          <span id="hud-lives" class="hud-value">3</span>
+        </div>
+      </div>
+      <button id="btn-pause" class="icon-btn" aria-label="Pause">II</button>
+    </div>
+
+    <!-- Active power-up indicator -->
+    <div id="powerbar" class="hidden"></div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay">
+      <div class="panel">
+        <h1 class="title">NEON<span>BOUNCE</span></h1>
+        <p class="subtitle">The ultimate futuristic bounce game</p>
+        <button id="btn-play" class="btn">PLAY</button>
+        <button id="btn-levels" class="btn btn-ghost">LEVELS</button>
+        <div class="how-to">
+          <p><b>Tap / hold</b> to jump · hold longer to jump higher</p>
+          <p>Grab <b>rings</b> &amp; <b>coins</b>, ride <b>power-ups</b>, dodge <b>spikes</b></p>
+        </div>
+        <div class="toggles">
+          <button id="btn-theme" class="sound-toggle" aria-label="Toggle theme">THEME: NEON</button>
+          <button id="btn-sound" class="sound-toggle" aria-label="Toggle sound">SOUND: ON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Select -->
+    <div id="levelselect-screen" class="overlay hidden">
+      <div class="panel panel-wide">
+        <h2 class="title-sm">SELECT LEVEL</h2>
+        <div id="level-grid" class="level-grid"></div>
+        <button id="btn-back" class="btn btn-ghost">BACK</button>
+      </div>
+    </div>
+
+    <!-- Pause -->
+    <div id="pause-screen" class="overlay hidden">
+      <div class="panel">
+        <h2 class="title-sm">PAUSED</h2>
+        <button id="btn-resume" class="btn">RESUME</button>
+        <button id="btn-quit" class="btn btn-ghost">MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- Level Complete -->
+    <div id="win-screen" class="overlay hidden">
+      <div class="panel">
+        <h2 class="title-sm">LEVEL CLEAR</h2>
+        <div id="stars" class="stars">★ ★ ★</div>
+        <p id="win-text" class="subtitle">Nice run</p>
+        <button id="btn-next" class="btn">NEXT LEVEL</button>
+        <button id="btn-replay" class="btn btn-ghost">REPLAY</button>
+      </div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="over-screen" class="overlay hidden">
+      <div class="panel">
+        <h2 class="title-sm">GAME OVER</h2>
+        <p id="over-text" class="subtitle">The ball fizzled out</p>
+        <button id="btn-retry" class="btn">RETRY</button>
+        <button id="btn-quit2" class="btn btn-ghost">MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- Full clear -->
+    <div id="clear-screen" class="overlay hidden">
+      <div class="panel">
+        <h2 class="title-sm">ALL LEVELS CLEAR</h2>
+        <p id="clear-text" class="subtitle">You mastered Neon Bounce</p>
+        <button id="btn-restart" class="btn">PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <!-- Touch jump zone -->
+    <div id="jump-zone"></div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
