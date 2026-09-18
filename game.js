@@ -582,7 +582,7 @@
         loadLevel(state.level);
         state.score = carryScore;
         state.running = true;
-        requestAnimationFrame(loop);
+        startLoop();
       }, 650);
     }
   }
@@ -865,6 +865,7 @@
     hudLives.textContent = state.lives;
   }
 
+  let _powerbarKey = "";
   function renderPowerbar() {
     const chips = [];
     for (const k of ["shield", "magnet", "slow"]) {
@@ -873,8 +874,12 @@
         chips.push(`<div class="pwr-chip" style="color:${POWER_COLOR_OF(k)}">${POWER_LABEL[k]} ${secs}</div>`);
       }
     }
+    // Only touch the DOM when the content actually changes (avoids 60 reflows/sec).
+    const key = chips.join("");
+    if (key === _powerbarKey) return;
+    _powerbarKey = key;
     if (chips.length) {
-      powerbar.innerHTML = chips.join("");
+      powerbar.innerHTML = key;
       powerbar.classList.remove("hidden");
     } else {
       powerbar.innerHTML = "";
@@ -915,7 +920,7 @@
     loadLevel(state.level);
     if (S.isEnabled()) S.startMusic();
     state.running = true;
-    requestAnimationFrame(loop);
+    startLoop();
   }
 
   function nextLevel() {
@@ -924,7 +929,7 @@
     loadLevel(state.level);
     state.paused = false;
     state.running = true;
-    requestAnimationFrame(loop);
+    startLoop();
   }
 
   function retryLevel() {
@@ -933,7 +938,7 @@
     loadLevel(state.level);
     state.paused = false;
     state.running = true;
-    requestAnimationFrame(loop);
+    startLoop();
   }
 
   function pauseGame() {
@@ -950,7 +955,7 @@
     state.paused = false;
     S.click();
     if (S.isEnabled()) S.startMusic();
-    requestAnimationFrame(loop);
+    startLoop();
   }
 
   function quitToMenu() {
@@ -966,12 +971,39 @@
   }
 
   // ============================================================
-  //  MAIN LOOP
+  //  MAIN LOOP  (fixed-timestep physics, decoupled from render)
+  //  Physics always advances at a constant 60Hz based on real elapsed
+  //  time, so input response is consistent on any display refresh rate
+  //  and doesn't drift/lag when frames are dropped.
   // ============================================================
-  function loop() {
-    update();
+  const STEP = 1000 / 60;   // ms per physics step
+  const MAX_STEPS = 5;      // clamp to avoid spiral-of-death after a stall
+  let lastTime = 0;
+  let acc = 0;
+
+  function loop(now) {
+    if (!lastTime) lastTime = now;
+    let delta = now - lastTime;
+    lastTime = now;
+    if (delta > 250) delta = STEP; // tab was backgrounded; don't fast-forward
+
+    acc += delta;
+    let steps = 0;
+    while (acc >= STEP && steps < MAX_STEPS) {
+      update();
+      acc -= STEP;
+      steps++;
+    }
+    if (steps === MAX_STEPS) acc = 0; // drop backlog instead of lagging
+
     draw();
     if (state.running && !state.paused) requestAnimationFrame(loop);
+  }
+
+  function startLoop() {
+    lastTime = 0;
+    acc = 0;
+    requestAnimationFrame(loop);
   }
 
   // init: sound + theme labels + static frame behind menu
