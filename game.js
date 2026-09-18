@@ -311,6 +311,11 @@
   let holding, holdFrames, goalPulse = 0, tick = 0;
   let shake = 0;
   let active = { shield: 0, magnet: 0, slow: 0 };
+  // responsiveness helpers: buffer a tap and allow coyote-time jumps
+  let jumpBuffer = 0;   // frames a pending tap stays valid
+  let coyote = 0;       // frames since last grounded that still allow a jump
+  const JUMP_BUFFER_FRAMES = 8;  // ~130ms window: a tap just before landing still fires
+  const COYOTE_FRAMES = 6;       // ~100ms: jump still works just after leaving ground
 
   function unlocked(i) {
     if (i === 0) return true;
@@ -340,15 +345,24 @@
   // ============================================================
   //  INPUT
   // ============================================================
+  function performJump() {
+    ball.vy = -JUMP_TAP;
+    ball.onGround = false;
+    holding = true;
+    holdFrames = 0;
+    jumpBuffer = 0;
+    coyote = 0;
+    spawnBurst(ball.x, ball.y + BALL_R, TH().ballMid, 8);
+    S.jump();
+  }
+
   function doJumpStart() {
     if (!state.running || state.paused) return;
-    if (ball.onGround) {
-      ball.vy = -JUMP_TAP;
-      ball.onGround = false;
-      holding = true;
-      holdFrames = 0;
-      S.jump();
-      spawnBurst(ball.x, ball.y + BALL_R, TH().ballMid, 8);
+    // instant jump if grounded or within coyote window; otherwise buffer the tap
+    if (ball.onGround || coyote > 0) {
+      performJump();
+    } else {
+      jumpBuffer = JUMP_BUFFER_FRAMES;
     }
   }
   function doJumpEnd() { holding = false; }
@@ -408,6 +422,9 @@
     for (const k of ["shield", "magnet", "slow"]) if (active[k] > 0) active[k]--;
     renderPowerbar();
 
+    // decay a buffered tap (consumed on landing in the collision step below)
+    if (jumpBuffer > 0) jumpBuffer--;
+
     // move hazards / movers (unaffected by slow-mo for fairness of timing? keep affected)
     for (const m of level._movers) {
       m.t += m.speed;
@@ -451,6 +468,14 @@
         // ride horizontal movers
         if (p.axis === "x") ball.x += Math.cos(p.t) * p.speed * p.range;
       }
+    }
+
+    // grounded bookkeeping: refresh coyote window and fire any buffered tap instantly
+    if (ball.onGround) {
+      coyote = COYOTE_FRAMES;
+      if (jumpBuffer > 0) performJump();
+    } else if (coyote > 0) {
+      coyote--;
     }
 
     // spikes

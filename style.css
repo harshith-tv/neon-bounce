@@ -330,6 +330,8 @@ canvas {
   position: absolute;
   inset: 0;
   z-index: 3;
+  touch-action: none;      /* no browser gesture/scroll delay on the play area */
+  -webkit-touch-callout: none;
 }
 
 .hidden {
